@@ -127,3 +127,19 @@ Updated as tasks land; will be trimmed/finalized at T29.
   "competitor observed price" means in mart_price_position (T19) —
   worth calling out explicitly on that page rather than labeling it
   as competitor-brand pricing.
+
+## mart_service (T16)
+- "In full" = `delivered_eaches >= ordered_eaches` per order, zero
+  tolerance for partial shortfall — a judgment call; a tolerance band
+  (e.g. >=95%) would also be defensible, but zero-tolerance is the
+  more conservative/legible default and matches "in full" literally.
+- Only `DELIVERED`/`PARTIAL` orders count toward fill_rate_eaches/
+  otif_pct. `CANCELLED` orders never enter fulfillment (delivered_eaches
+  is always 0, zero matching fact_deliveries rows) — counting them
+  would misrepresent a demand-side cancellation as a fulfillment
+  failure. `OPEN` orders are still in-flight (also zero fact_deliveries
+  rows) — including them would bias whichever month is most recent.
+- `mart_service_worst` excludes outlet-months with fewer than 5 orders
+  — otherwise a single bad order at a low-volume outlet would dominate
+  the "worst" list ahead of a high-volume outlet with a real, sustained
+  problem.
