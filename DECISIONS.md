@@ -196,3 +196,24 @@ Updated as tasks land; will be trimmed/finalized at T29.
   `SUM(credit_note_value_inr)` / `SUM(line_value_inr)`, not a bug:
   13,686 returns average ~₹684 each vs. 460,515 order lines averaging
   ~₹39,881 each.
+
+## mart_price_position (T19)
+- **4 of Kestrel's 8 warehouse cities have zero rows in this mart** —
+  BazaarPulse only covers Mumbai/Bengaluru/Chennai/Delhi, so the other
+  4 (wherever they are) simply have no competitor price data. Not a
+  gap to "fix"; there is no source for it. Should be surfaced
+  explicitly on the price-position page (e.g. "no coverage" state for
+  the other 4 cities) rather than left as a silent absence.
+- Both `competitor_price_median_inr` and `competitor_price_min_inr`
+  are computed (375 of 1,134 matched city+SKU combos have more than
+  one retailer listing) — `gap_pct` uses the median as primary since
+  it's less skewed by one outlier retailer than the min would be;
+  `gap_pct_vs_min` is kept alongside for reference.
+- "Week" is BazaarPulse's own weekly observation date used directly
+  (confirmed 7-day spacing in the raw history), not re-bucketed into
+  ISO weeks — avoids introducing a second, redundant week-numbering
+  scheme.
+- Median has no native SQLite aggregate, so it's computed in Python
+  after the SQL grouping pass rather than reached for a window-function
+  workaround — simpler and just as correct at this data volume (6,317
+  rows).
