@@ -288,3 +288,39 @@ Updated as tasks land; will be trimmed/finalized at T29.
   doesn't forward signals to children by default. `serve.sh`'s trap is
   what makes the group-signal case work by explicitly killing its two
   recorded child PIDs rather than relying on `make` to propagate.
+
+## Service + cold-chain pages (T25)
+- Charts are hand-rolled SVG (`components/charts/BarChart.tsx`,
+  `LineChart.tsx`) rather than a charting library — no library was
+  already in the project, and the dataviz skill's mark specs (2px
+  lines, 4px rounded bar ends, hairline gridlines, hover tooltips,
+  single-hue magnitude) are simple enough to implement directly.
+  Followed the skill's procedure: form → color (validated the light
+  palette's blue/red pair via `validate_palette.js`, all checks pass)
+  → marks → hover layer → accessibility pass → render-and-look. Charts
+  are light-mode only, matching the rest of the app (Nav/FilterBar have
+  no dark-mode styling yet either) rather than introducing dark-mode
+  divergence just for charts.
+- Caught a real correctness bug while building the cold-chain page's
+  "near-expiry stock value by warehouse" chart: `near_expiry_stock_value_inr`
+  is a warehouse-month snapshot broadcast onto every route row in
+  `mart_coldchain` (same value repeated per route, confirmed via direct
+  query). Naively summing it by warehouse multiply-counted the same
+  figure once per route *and* once per month — inflating a real ~₹4
+  crore/warehouse figure into a nonsensical ~₹2,000 crore. Fixed by
+  restricting to a single month (the latest with actual snapshot
+  coverage — the mart's trailing month or two is delivery-spillover
+  with zero inventory data) and averaging across the identical route
+  duplicates rather than summing.
+- Two SVG label-clipping bugs, both from fixed pixel margins that
+  didn't scale with label content: y-axis ticks with wide formatted
+  values (e.g. `₹200000.0L`) were cut off against a fixed 44px left
+  margin, and a fixed 56px/point line-chart spacing made 18-month
+  trends ~1000px wide inside a ~550px card — technically scrollable,
+  but the unscrolled view showed a stray clipped label at the cutoff,
+  reading as broken rather than "scroll for more." Fixed by sizing
+  margins from actual label-string length and scaling point spacing
+  down for longer series (with a floor) so a typical trend fits without
+  scrolling. Caught by actually screenshotting the rendered charts
+  (the skill's final "render it and look at it" step) — `tsc`/`next
+  build` were clean the whole time since neither bug is a type error.
