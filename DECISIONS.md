@@ -86,3 +86,17 @@ Updated as tasks land; will be trimmed/finalized at T29.
   resumes from the last fully-written record's `next_cursor` rather than
   restarting at offset 0. Verified against a real kill -9 mid-walk plus
   manual truncation of the trailing line.
+
+## BazaarPulse crawl (T13)
+- Bengaluru/Chennai's per-city `PAGINATION.txt` (fetchable, not
+  robots-disallowed) is fetched and used as the page-N URL template;
+  Mumbai/Delhi have no such file, so their pager hrefs are trusted
+  directly — matches the brief's description of which cities use real
+  paths vs. the `?p=N` trap. Page *count* comes from the pager anchors'
+  digit text either way, since that number is accurate regardless of
+  whether the href itself is trustworthy.
+- **New finding:** 3 of the 1,137 discovered `/product/{id}.html` links
+  (387, 458, 777) 404 — dead links in the listing pages, not a crawl
+  bug (confirmed: all 1,134 real files on disk were discovered, zero
+  missed). T14's parser needs to skip 404s rather than treat them as a
+  parse failure.
