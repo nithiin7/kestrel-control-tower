@@ -4,7 +4,7 @@ import httpx
 
 from app.llm.base import LLMProvider
 
-REQUEST_TIMEOUT_SECONDS = 60.0
+REQUEST_TIMEOUT_SECONDS = 180.0
 
 
 class OllamaProvider(LLMProvider):
