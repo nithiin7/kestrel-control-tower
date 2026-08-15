@@ -5,6 +5,7 @@ import sqlite3
 from fastapi import APIRouter, Depends
 
 from app.db import get_db
+from app.fiscal import get_latest_complete_fiscal_quarter
 
 router = APIRouter()
 
@@ -43,10 +44,14 @@ def get_filters(db: sqlite3.Connection = Depends(get_db)) -> dict:
         )
     ]
 
+    max_order_date = db.execute("SELECT MAX(order_date) FROM fact_orders").fetchone()[0]
+    latest_complete_quarter = get_latest_complete_fiscal_quarter(max_order_date) if max_order_date else None
+
     return {
         "regions": regions,
         "warehouses": warehouses,
         "routes": routes,
         "outlets": outlets,
         "fiscal_quarters": fiscal_quarters,
+        "latest_complete_quarter": latest_complete_quarter,
     }

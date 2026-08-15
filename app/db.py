@@ -10,7 +10,12 @@ from config.settings import ANALYTICS_DB_PATH
 
 
 def get_connection() -> sqlite3.Connection:
-    conn = sqlite3.connect(f"file:{ANALYTICS_DB_PATH}?mode=ro", uri=True)
+    # check_same_thread=False: each request gets its own connection (opened
+    # and closed here, never shared across requests), but FastAPI's generator
+    # dependencies can run a request's __enter__/__exit__ on different
+    # threadpool workers, which sqlite3 forbids by default even though the
+    # connection is never touched concurrently from two threads at once.
+    conn = sqlite3.connect(f"file:{ANALYTICS_DB_PATH}?mode=ro", uri=True, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     return conn
 
