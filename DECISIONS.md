@@ -250,3 +250,41 @@ Updated as tasks land; will be trimmed/finalized at T29.
   harmless, but it's a reminder that natural-language answers should be
   read as "a plausible attempt," not a verified fact, especially with
   smaller local models.
+
+## Frontend scaffold + serve.sh (T24)
+- Found and fixed a real bug in `app/db.py` while testing the landing
+  page's parallel fetches (filters + 4 pillar endpoints firing at once):
+  `sqlite3.ProgrammingError: SQLite objects created in a thread can only
+  be used in that same thread`. FastAPI's generator dependencies can run
+  a request's setup and teardown on different threadpool workers even
+  though the connection is only ever touched by one thread at a time —
+  fixed with `check_same_thread=False` on the read-only connection. This
+  affected every existing endpoint (T20-T23), not just this task; only
+  surfaced now because this is the first place several endpoints get hit
+  concurrently.
+- `app/fiscal.py` duplicates `get_latest_complete_fiscal_quarter()` from
+  `build/dims/build_dim_date.py` rather than importing it, since the app
+  is only supposed to read the built `analytics.db`, never import
+  build-time pipeline code. `/api/meta/filters` now computes it from
+  `MAX(fact_orders.order_date)` and returns it as `latest_complete_quarter`
+  — verified it resolves to FY2026-27 Q1 (2026-04-01 – 2026-06-30) for
+  the Q1 tile, not wall-clock today.
+- `Nav.tsx` uses plain `<a>` tags instead of `next/link`'s typed `Link`
+  for the four pillar-page links that don't exist until T25/T26 — Next's
+  typed-routes feature rejects `Link` hrefs that don't resolve to a real
+  page at build time. Worth swapping to `Link` once those pages land.
+- The landing page's "worst of worst" row surfaced a real small-sample
+  issue in T21's `/api/coldchain`: `worst_routes` has no minimum-volume
+  floor (unlike `mart_service_worst`'s `MIN_ORDERS_FOR_WORST_RANKING`),
+  so a route with exactly 1 chilled delivery that had an excursion shows
+  as "100% excursion rate" and dominates the ranking. The underlying
+  data is correct (verified against raw mart rows), just statistically
+  noisy — worth a minimum-delivery floor if `/api/coldchain`'s worst
+  ranking gets revisited.
+- Verified the Ctrl+C acceptance test properly: a real terminal's Ctrl+C
+  sends SIGINT to the whole foreground process group (confirmed clean
+  shutdown, zero orphans via `ps`/`lsof`), not just to the `make`
+  process — signaling `make` alone does *not* cascade, since `make`
+  doesn't forward signals to children by default. `serve.sh`'s trap is
+  what makes the group-signal case work by explicitly killing its two
+  recorded child PIDs rather than relying on `make` to propagate.
