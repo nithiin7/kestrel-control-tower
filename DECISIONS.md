@@ -364,3 +364,34 @@ Updated as tasks land; will be trimmed/finalized at T29.
   there's no readability reason to protect a minimum pixel gap between
   points (hover already snaps to the nearest point regardless of
   spacing), unlike the label-width floor, which is a real constraint.
+
+## Ask-anything page (T27)
+- Found and fixed a real robustness gap in T23's `/api/ask`: the local
+  Ollama model (`qwen3:4b`) routinely ignored the "output ONLY the SQL
+  statement" instruction and wrapped the query in explanatory prose
+  before *and* after a fenced code block — a shape T23's
+  `_strip_code_fences` never handled (it only stripped a fence if the
+  *entire* response was one, so a wrapped response fell through as raw
+  prose and got correctly-but-uselessly rejected as invalid SQL syntax).
+  Replaced it with `_extract_sql`, which searches for a fenced block
+  anywhere in the response via regex and falls back to the raw text
+  only if no fence is found. Verified against both a real prose-wrapped
+  Ollama response (previously failed, now extracts cleanly) and the
+  T23 destructive-prompt-injection regression test (still correctly
+  rejected, table untouched) — the extraction change doesn't loosen
+  the safety validator at all, it only widens what counts as "found the
+  SQL" before that validator ever sees it.
+- Manually exercised both acceptance-test legs end-to-end through the
+  UI (not just curl): a real question against local Ollama rendered a
+  natural-language answer, the SQL in a `<details>` block, and a 5-row
+  result table, zero console errors; then restarting the backend with
+  `OLLAMA_BASE_URL` pointed at an unreachable port (rather than
+  disrupting the user's actual running Ollama instance) reproduced the
+  "neither provider available" state cleanly — rendered as a calm blue
+  informational box, not styled as an error, with zero console errors.
+- Swapped `Nav.tsx` from plain `<a>` tags back to `next/link`'s typed
+  `Link` now that all five pillar pages exist (T24 had deferred this
+  exact swap in a comment, since Next's typed-routes feature rejects
+  `Link` hrefs that don't resolve to a real page at build time) —
+  verified every nav link now does a client-side transition with zero
+  console errors.
