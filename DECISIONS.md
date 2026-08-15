@@ -100,3 +100,30 @@ Updated as tasks land; will be trimmed/finalized at T29.
   bug (confirmed: all 1,134 real files on disk were discovered, zero
   missed). T14's parser needs to skip 404s rather than treat them as a
   parse failure.
+
+## BazaarPulse SKU matching (T15)
+- Pack size agreement is a HARD GATE on a match, not just a score
+  component — a name match against the wrong pack size would corrupt
+  T19's price-gap-% math (comparing prices across different pack sizes
+  is meaningless), so a candidate is only eligible at all if its
+  (value, uom) exactly equals the listing's parsed pack size.
+  Confidence threshold (90) applies to name-similarity only, among
+  pack-matching candidates.
+- Name similarity is `max(token_sort_ratio, ratio-on-space-collapsed-
+  strings)` — token-based scoring alone scores "AmritValley" vs.
+  "Amrit Valley" only ~63 (token-count mismatch from the missing
+  space) despite being a 1-character edit apart; the space-collapsed
+  ratio catches this and other concatenation-vs-spaced brand spelling
+  differences.
+- **Significant finding:** after normalization, **100% of the 1,134
+  BazaarPulse listings match a real dim_products SKU** at score >=95
+  (empirical floor). This is because `dim_products.brand` has 6 values
+  — Kestrel plus Bluepeak/Hillfare/Coastline/Amrit/Marwar — and all 6
+  are Kestrel's own multi-brand portfolio (per `products.supplier_name`
+  in the source data), not external competitors. BazaarPulse is
+  therefore an MAP/retail-price-variance monitor across Kestrel's own
+  brand portfolio sold through different online retailers, not
+  genuine inter-company competitor pricing. This reframes what
+  "competitor observed price" means in mart_price_position (T19) —
+  worth calling out explicitly on that page rather than labeling it
+  as competitor-brand pricing.
