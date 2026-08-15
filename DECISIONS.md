@@ -8,8 +8,8 @@ Cold Chain (excursions/100 chilled deliveries, near-expiry stock,
 cold-chain returns), Money (freight ₹/case, returns % of dispatch, carrier
 leakage), Price Position (Kestrel MRP vs. competitor MRP vs. observed
 price, 3 columns), and Ask-anything (text-to-SQL, SQL and results shown for
-transparency, read-only enforced at the DB level). Regional managers use
-the same shared filter bar, not separate logins.
+transparency, read-only enforced at the DB level). One shared filter bar
+across all pillars, not separate logins.
 
 **Deliberately not built.** Competitor pricing covers 4 of 8 warehouse
 cities (Mumbai/Bengaluru/Chennai/Delhi) — BazaarPulse has no data for the
@@ -18,29 +18,32 @@ per-shipment — the partner API has no delivery/order join key.
 **BazaarPulse's "competitors" are Kestrel's own multi-brand portfolio**, not
 rival companies — Price Position is really an MAP/retailer-variance
 monitor, the single most important caveat here. `/internal/`/`/admin/`
-were never fetched. KP-2301 (header/line value mismatch) doesn't reproduce
-in this snapshot. No auth/RBAC, no production Next build, no caching, no
-alerting.
+never fetched. KP-2301 doesn't reproduce in this snapshot. No auth/RBAC,
+production build, caching, or alerting.
 
 **Assumptions where the brief was ambiguous or self-contradicting.** Fill
-rate is reported in **eaches**, not cases — the brief's illustrative
-question says "case fill rate," but Rakesh's follow-up explicitly overrides
-that. OTIF "in full" = `delivered_eaches >= ordered_eaches`, zero
-tolerance. Near-expiry = ≤30 days to expiry; on-time = zero tolerance (raw
-`delay_minutes` disagrees ~87% of the time — treated as noise). "Latest
-complete quarter" derives from the data's own max order date (2026-06-30 →
-FY2026-27 Q1), never wall-clock today. Test outlets are excluded by
-code/name pattern, never by `status` (all 3 show `ACTIVE`).
+rate is reported in **eaches**, not cases — Rakesh's follow-up overrides the
+brief's "case fill rate" wording. OTIF "in full" = `delivered_eaches >=
+ordered_eaches`, zero tolerance. Near-expiry = ≤30 days; on-time = zero
+tolerance (raw `delay_minutes` disagrees ~87% of the time — treated as
+noise). "Latest complete quarter" derives from the data's own max order
+date, never wall-clock today. Test outlets excluded by code/name pattern,
+never by `status`.
 
-**Next two weeks.** Production Next.js build behind real auth/RBAC; a
-cache layer in front of the marts; charting ask-anything's results; a
-second competitor-price source for the other 4 cities; a regression suite
-beyond build-time assertions; threshold alerting instead of a visit.
+**QA against the brief's 8 illustrative questions** (`scripts/qa_checklist.md`).
+6/8 land well; 2 are real gaps — "worst 5 outlets last month" (the
+worst-outlets view is one precomputed global top-15, not per-filter) and
+"top-20 SKUs vs. Mumbai competitor price" (ask-anything used an unrelated
+city-wide min, not the per-SKU one). Also surfaced: **OTIF is 0% for every
+region/route/month, all 18 months** — zero orders here ever clear the
+zero-tolerance in-full bar, so the metric doesn't discriminate on this data.
 
-**What breaks first in production.** Freight API chaos (429/503) rate
-compounds at 10x volume. LLM cost/latency/accuracy at scale — no response
-caching, no cost ceiling, shaky SQL generation on smaller local models.
-BazaarPulse's per-city markup extraction is brittle (4 hand-written
-parsers; any site change breaks one silently). `next dev` isn't
-production-grade under load. SQLite is single-writer — fine now, not at
-real scale.
+**Next two weeks.** Real auth/RBAC and a production build; a cache layer
+over the marts; a second competitor-price source; a regression suite
+beyond build-time assertions; threshold alerting.
+
+**What breaks first in production.** Freight API chaos compounds at 10x
+volume. LLM cost/latency/accuracy at scale — no caching, no cost ceiling,
+shaky SQL generation on smaller local models (see QA). BazaarPulse's
+per-city parsers are brittle — a site change breaks one silently. `next
+dev` isn't production-grade under load. SQLite is single-writer.
