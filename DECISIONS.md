@@ -73,3 +73,16 @@ Updated as tasks land; will be trimmed/finalized at T29.
   damage can be ordinary breakage/mishandling unrelated to temperature —
   so it's kept as a separate `cold_chain_secondary_signal_flag` instead
   of being folded into the primary metric.
+
+## freight_invoices ingest (T10/T11)
+- Only `amount` is converted paise→INR. `detention_charge` has the same
+  suspiciously-large integer scale (0-32,000) but is nowhere documented
+  as paise (only `amount` is, in the mock server's own docstring) — kept
+  as returned rather than guessed at, to avoid silently introducing a
+  100x error if the guess is wrong.
+- Resume checkpoint is an append-only JSONL log (one line per fetched
+  page), not a single JSON blob — a truncated/partial trailing line from
+  a mid-write crash is detected and discarded on load, and the walk
+  resumes from the last fully-written record's `next_cursor` rather than
+  restarting at offset 0. Verified against a real kill -9 mid-walk plus
+  manual truncation of the trailing line.
