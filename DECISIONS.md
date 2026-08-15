@@ -173,3 +173,26 @@ Updated as tasks land; will be trimmed/finalized at T29.
   return value is attributed via `fact_orders.order_id` (the order's
   fulfillment warehouse/route) — zero orphaned `order_id`s verified,
   so this join is safe.
+
+## mart_money (T18)
+- **Two of the three brief-listed measures don't share the warehouse x
+  route x month grain, so they're split into satellite tables** instead
+  of being force-fit or broadcast: `mart_money_returns_by_category`
+  (category x month — SKUs aren't warehouse-specific, so a
+  warehouse/route dimension here would just be noise) and
+  `mart_money_carrier_variance` (carrier only — carrier exists
+  exclusively on fact_freight, with no link into deliveries, orders, or
+  returns; forcing a warehouse/route breakdown would invent a
+  relationship the data doesn't have). Same reasoning as mart_coldchain's
+  near-expiry column (T17), applied twice more in one mart.
+- Freight cost per delivered case uses `fact_deliveries` (not
+  `fact_orders`) for the warehouse/route/month on the case side, since
+  "delivered case" is literally about the delivery event — the two
+  agree in every row in this data (zero mismatches verified) so the
+  choice doesn't change any numbers here, but it's the more defensible
+  reading of "delivered."
+- Returns land at ~0.05% of dispatch value overall (well inside the
+  0-15% sanity band, just at the low end) — cross-checked against raw
+  `SUM(credit_note_value_inr)` / `SUM(line_value_inr)`, not a bug:
+  13,686 returns average ~₹684 each vs. 460,515 order lines averaging
+  ~₹39,881 each.
