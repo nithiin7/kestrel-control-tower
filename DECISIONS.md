@@ -395,3 +395,33 @@ Updated as tasks land; will be trimmed/finalized at T29.
   `Link` hrefs that don't resolve to a real page at build time) —
   verified every nav link now does a client-side transition with zero
   console errors.
+
+## Build pipeline orchestration (T28)
+- `build/assertions.py` mirrors (doesn't import from) T1's
+  `scripts/profile_source_db.py` checks rather than sharing code with
+  it — that script's job is a one-time human-readable report plus the
+  `city_name_map.csv` artifact; `pipeline.py` needs a fast,
+  side-effect-free subset it can run before every single build. Traded
+  a small duplication risk (the hard-coded numbers — 724 outlets, the
+  6.4% returns band — live in two files) for not touching an
+  already-verified T1 script; flagged in both files' docstrings so a
+  future source-snapshot change doesn't get updated in only one place.
+- Steps run via `subprocess`, not in-process imports — each build
+  script already has its own `sys.path` setup and `main()`/exit-code
+  contract designed to be run standalone (`python build/dims/...py`),
+  so subprocess reuses that contract as-is rather than fighting
+  Python's import system to call 18 independent scripts' `main()`s in
+  one process.
+- **A truly fresh clone needs both mock services running** (`partner_api`
+  on :8088, `bazaarpulse_site` on :8080) for `make build` to succeed —
+  `data/raw_cache/` is gitignored, so T11's freight ingest and T13's
+  BazaarPulse crawl have nothing to resume from and must hit the live
+  APIs from scratch. Verified two full back-to-back runs (176s then
+  150s, the difference being cache reuse inside the run) produce
+  byte-identical row counts across all 25 tables — true idempotency,
+  not just "didn't crash." Also verified the guard actually blocks: forced
+  a fake regression (`EXPECTED_OUTLET_COUNT = 999999`), confirmed the
+  pipeline fails at the guard step with `analytics.db`'s mtime
+  unchanged (never touched), then restored the file and re-verified
+  clean. Worth flagging prominently in T29's README as a cold-start
+  prerequisite, not just a "nice to have."
