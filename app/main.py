@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from app.routers import meta
+from app.routers import coldchain, meta, service
 from config.settings import FRONTEND_PORT
 
 app = FastAPI(title="Kestrel Provisions Control Tower API")
@@ -20,3 +20,5 @@ app.add_middleware(
 )
 
 app.include_router(meta.router)
+app.include_router(service.router)
+app.include_router(coldchain.router)
