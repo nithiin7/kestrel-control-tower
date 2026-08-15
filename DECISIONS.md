@@ -57,3 +57,19 @@ Updated as tasks land; will be trimmed/finalized at T29.
   of noisy columns (e.g. KP-2402's `return_qty` sign bug) — the raw
   column is kept in `fact_deliveries` for audit but never used as
   ground truth.
+
+## fact_returns (T9)
+- `return_qty` sign bug (KP-2402) fixed unconditionally via `ABS()` —
+  confirmed uncorrelated noise (~6.4% negative, uniform across every
+  other field), not a conditional/reason-based fix.
+- Eaches conversion uses `case_pack_at_order` looked up via
+  `order_line_id`; falls back to `dim_products.case_pack` if that link
+  is missing (never triggers in this snapshot — every return resolves
+  cleanly — but kept as a defensive safety net, not baked in as an
+  assumption).
+- **Cold-chain-caused call:** only `RT06_COLD_CHAIN_BREACH` drives
+  `cold_chain_caused_flag` (783 rows post-exclusion). `RT02_DAMAGE_TRANSIT`
+  on a chilled SKU (814 raw rows) is a weaker, ambiguous signal — transit
+  damage can be ordinary breakage/mishandling unrelated to temperature —
+  so it's kept as a separate `cold_chain_secondary_signal_flag` instead
+  of being folded into the primary metric.
