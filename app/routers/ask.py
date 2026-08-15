@@ -1,6 +1,7 @@
 """POST /api/ask — text-to-SQL over data/analytics.db."""
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -43,13 +44,21 @@ class AskRequest(BaseModel):
     question: str
 
 
-def _strip_code_fences(text: str) -> str:
-    text = text.strip()
-    if text.startswith("```"):
-        lines = text.splitlines()[1:]
-        if lines and lines[-1].strip().startswith("```"):
-            lines = lines[:-1]
-        text = "\n".join(lines)
+FENCE_RE = re.compile(r"```(?:sql)?\s*\n?(.*?)```", re.DOTALL | re.IGNORECASE)
+
+
+def _extract_sql(text: str) -> str:
+    """Pull the SQL out of a raw LLM response.
+
+    Despite the prompt's "output ONLY the SQL statement" instruction, weaker
+    models (observed with a local Ollama model) routinely wrap the query in
+    explanatory prose before and after a fenced code block rather than
+    returning bare SQL — so search for a fence anywhere in the response
+    instead of assuming the whole reply is (at most) one fenced block.
+    """
+    match = FENCE_RE.search(text)
+    if match:
+        return match.group(1).strip()
     return text.strip()
 
 
@@ -61,7 +70,7 @@ def ask(body: AskRequest) -> dict:
 
     schema_card = build_schema_card()
     sql_prompt = SQL_PROMPT_TEMPLATE.format(schema_card=schema_card, question=body.question)
-    sql = _strip_code_fences(provider.ask(sql_prompt))
+    sql = _extract_sql(provider.ask(sql_prompt))
 
     try:
         columns, rows = run_readonly_query(sql)

@@ -8,6 +8,18 @@ async function apiFetch<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+async function apiPost<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    throw new Error(`API request failed: ${res.status} ${res.statusText} (${path})`);
+  }
+  return res.json() as Promise<T>;
+}
+
 export interface Region {
   region_id: number;
   region_code: string;
@@ -163,4 +175,27 @@ export interface PricePositionResponse {
 
 export function getPricePosition(filters: QueryFilters = {}): Promise<PricePositionResponse> {
   return apiFetch<PricePositionResponse>(`/api/price_position${toQueryString(filters)}`);
+}
+
+export interface AskSuccess {
+  sql: string;
+  columns: string[];
+  rows: Record<string, unknown>[];
+  natural_language_answer: string;
+}
+
+export interface AskNoLlmConfigured {
+  error: "no_llm_configured";
+}
+
+export interface AskUnsafeSqlRejected {
+  error: "unsafe_sql_rejected";
+  sql: string;
+  detail: string;
+}
+
+export type AskResponse = AskSuccess | AskNoLlmConfigured | AskUnsafeSqlRejected;
+
+export function askQuestion(question: string): Promise<AskResponse> {
+  return apiPost<AskResponse>("/api/ask", { question });
 }
