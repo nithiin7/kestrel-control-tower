@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# Data (grader supplies kestrel_ops.db; analytics.db + raw cache are build output)
+data/*.db
+data/raw_cache/
+!data/raw_cache/**/.gitkeep
+
+# Env
+.env
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/.env.local
+
+# OS / editor
+.DS_Store
+.vscode/

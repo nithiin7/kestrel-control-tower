@@ -1,0 +1,20 @@
+raw_city,canonical_city,merged
+Bangalore,Bengaluru,yes
+Bengaluru,Bengaluru,no
+Chennai,Chennai,no
+Delhi,Delhi,no
+Gurugram,Gurugram,no
+Guwahati,Guwahati,no
+Hyderabad,Hyderabad,no
+Indore,Indore,no
+Jaipur,Jaipur,no
+Kochi,Kochi,no
+Kolkata,Kolkata,no
+Ludhiana,Ludhiana,no
+Mumbai,Mumbai,no
+Nagpur,Nagpur,no
+New Delhi,Delhi,yes
+Patna,Patna,no
+Pune,Pune,no
+Raipur,Raipur,no
+Surat,Surat,no
