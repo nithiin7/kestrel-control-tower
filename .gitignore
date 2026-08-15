@@ -10,6 +10,10 @@ data/*.db
 data/raw_cache/
 !data/raw_cache/**/.gitkeep
 
+# Assignment pack fixtures (Aistra-supplied mock services, not deliverable code)
+partner_api/
+bazaarpulse_site/
+
 # Env
 .env
 
