@@ -30,10 +30,14 @@ build/
   pipeline.py             orchestrates the full build in dependency order
   assertions.py           data-quality guardrails asserted at build time
 app/                      FastAPI: routers, LLM provider interface, schemas
-frontend/                 Next.js App Router, TypeScript
+frontend/                 Next.js App Router, TypeScript, light-only design
+  app/                    one page per pillar (service/coldchain/money/price-position/ask) + landing
+  components/ui.tsx       shared primitives (Card, Th/Td, PageHeader, ErrorBanner, EmptyRow) — reuse these, don't restyle inline
+  components/charts/      hand-rolled SVG Bar/LineChart, see dataviz skill conventions
 scripts/
   profile_source_db.py    ground-truth profiling + regression guards
   serve.sh                launches uvicorn + next dev together
+  qa_checklist.md         the brief's 8 illustrative questions run against the live system
 partner_api/               supplied mock carrier billing API (gitignored fixture)
 bazaarpulse_site/          supplied mock scrape target (gitignored fixture)
 docs/                       assignment brief, data dictionary, external sources
@@ -57,6 +61,11 @@ tests/
   operational DB's IST.
 - `/internal/` on the scrape target is robots-disallowed and must never be
   fetched.
+- The frontend is deliberately light-only (`color-scheme: light` pinned in
+  `globals.css`) — every surface color is a fixed light value, so letting
+  the OS dark-mode media query flip text color previously put light text on
+  light surfaces. Don't reintroduce a dark-mode media query without also
+  redefining the surface colors.
 
 ## How to work in this repo
 

@@ -11,6 +11,27 @@ See `DECISIONS.md` for what was built, what was deliberately left out, and
 the judgment calls made where the brief was ambiguous. See `CLAUDE.md` for
 repo layout and coding conventions.
 
+## What you'll see
+
+A sticky nav (Overview / Service / Cold Chain / Money / Price Position / Ask)
+and a shared filter bar (region/warehouse/route/outlet/date range) on every
+page:
+
+- **Overview** — the latest complete fiscal quarter, and a "worst of worst"
+  summary across all four KPI pillars.
+- **Service** — worst-performing outlets by fill rate, fill-rate trend, and
+  fill rate by region.
+- **Cold Chain** — worst cold-chain routes by excursion rate, excursion trend
+  by month, and near-expiry stock value by warehouse.
+- **Money** — routes with the highest freight cost per delivered case, cost
+  trend by month, and cost by warehouse.
+- **Price Position** — Kestrel's MRP vs. the competitor's own MRP vs. the
+  competitor's observed street price, as three clearly separated columns
+  (scoped to the 4 cities BazaarPulse covers).
+- **Ask** — a chat-style box for natural-language questions over the data;
+  shows the generated SQL and result table alongside the answer, or a clear
+  "no LLM configured" state if neither provider below is set up.
+
 ## Prerequisites
 
 - **Python 3.12+**
@@ -97,8 +118,13 @@ LLM is configured. To enable it, pick one:
   ```
 - **Ollama** (local, no key needed): if an Ollama server is already
   running on `localhost:11434`, the backend uses it automatically whenever
-  `ANTHROPIC_API_KEY` isn't set. No action needed beyond having Ollama
-  running with a model pulled.
+  `ANTHROPIC_API_KEY` isn't set. The default model name is `llama3.1`
+  (`config/settings.py`) — if that isn't what you have pulled, set
+  `OLLAMA_MODEL` to match one you do (`ollama list` to check):
+  ```bash
+  OLLAMA_MODEL=qwen3:4b make serve
+  ```
+  Responses from a local model can take 30–90s — that's expected, not a hang.
 
 Resolution order: `ANTHROPIC_API_KEY` first, then a live Ollama probe, then
 "not configured" — never a startup failure either way.
@@ -139,3 +165,7 @@ cleanly — nothing is left running in the background.
   is running on `:8000`. If you created a custom `frontend/.env.local`
   (step 5), confirm `NEXT_PUBLIC_API_BASE_URL` in it actually matches where
   the backend is running.
+- **`/ask` returns a 500 / connection error with Ollama running**: the
+  default `OLLAMA_MODEL` (`llama3.1`) probably isn't pulled. Run
+  `ollama list` and set `OLLAMA_MODEL` to a model you actually have (see
+  step 5).
