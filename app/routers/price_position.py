@@ -51,7 +51,7 @@ def get_price_position(
     rows = [
         dict(row)
         for row in db.execute(
-            "SELECT city, category, sku_code, week, kestrel_mrp_inr, "
+            "SELECT city, category, sku_code, week, kestrel_mrp_inr, competitor_mrp_inr, "
             "competitor_price_median_inr AS competitor_price_inr, "
             "competitor_price_min_inr, competitor_listing_count, gap_pct, gap_pct_vs_min "
             f"FROM mart_price_position {where} ORDER BY week, city, sku_code",
