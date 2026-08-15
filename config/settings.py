@@ -27,6 +27,7 @@ FREIGHT_API_BASE_URL = os.environ.get("FREIGHT_API_BASE_URL", "http://localhost:
 BAZAARPULSE_BASE_URL = os.environ.get("BAZAARPULSE_BASE_URL", "http://localhost:8080")
 
 OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.1")
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 
 
