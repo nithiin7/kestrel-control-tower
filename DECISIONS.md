@@ -143,3 +143,15 @@ Updated as tasks land; will be trimmed/finalized at T29.
   — otherwise a single bad order at a low-volume outlet would dominate
   the "worst" list ahead of a high-volume outlet with a real, sustained
   problem.
+
+## fact_inventory_snapshots (T8)
+- `near_expiry_flag` threshold: `expiry_date - snapshot_date <= 30`
+  days. A round number representative of a typical reorder/rotation
+  cycle for short-shelf-life grocery stock — 14 or 45 would also be
+  defensible; 30 was picked as the middle-of-the-road default.
+  Near-expiry rate at this threshold: 14.42% (18,894/131,040).
+- `on_hand_eaches` cross-checked against `on_hand_cases * case_pack`
+  rather than trusted outright; zero discrepancies found in this
+  snapshot (verified) — the log table is still created empty rather
+  than being skipped, so a future data refresh with real discrepancies
+  doesn't silently need new code.
