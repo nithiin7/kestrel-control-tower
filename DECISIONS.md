@@ -324,3 +324,43 @@ Updated as tasks land; will be trimmed/finalized at T29.
   scrolling. Caught by actually screenshotting the rendered charts
   (the skill's final "render it and look at it" step) — `tsc`/`next
   build` were clean the whole time since neither bug is a type error.
+
+## Money + price-position pages (T26)
+- Found and fixed a real gap in T19's `mart_price_position`:
+  `raw_bazaarpulse_products.competitor_mrp_inr` (the competitor
+  listing's own printed MRP) is fully populated — 1,134/1,134 matched
+  listings, all 5 retailers — but was never carried through the mart,
+  which only surfaced the observed street price. The brief's own ask
+  ("Kestrel MRP vs. what competitors are actually charging") and this
+  task's explicit "do not merge these" instruction both assume a real
+  third field exists, so rather than fake it or collapse to two
+  columns, extended `build_mart_price_position.py` to add
+  `competitor_mrp_inr` (median across matched listings per city+SKU,
+  broadcast across that pair's week rows — MRP is a per-listing label,
+  not a weekly observation like price) and exposed it through
+  `/api/price_position`. Rebuilt `analytics.db`; all prior acceptance
+  checks plus two new ones (zero unfilled `competitor_mrp_inr`, not
+  silently identical to the observed-price column) pass. Sanity-checked
+  the values: competitor MRP is often exactly equal to Kestrel's own
+  MRP (expected — T15's earlier finding that BazaarPulse's "competitors"
+  are reselling Kestrel's own portfolio, not rival brands), and
+  competitor MRP exceeds observed price in ~81% of rows, consistent
+  with retailers typically discounting off list price.
+- The price-position table visually distinguishes the three price
+  columns with light background tints (blue/gray/amber) in addition to
+  distinct text headers, so "Kestrel MRP / Competitor MRP / Competitor
+  observed price" don't read as one undifferentiated block of numbers —
+  a light table-only treatment, not a dataviz mark, so it doesn't
+  interact with the categorical palette rules.
+- The money and price-position pages surface "worst" tables the API
+  doesn't provide directly (unlike service/coldchain's `worst_outlets`/
+  `worst_routes`) — sorted client-side by highest freight cost per case
+  and largest MRP-vs-street gap respectively, matching the brief's
+  "worst performers immediately, not after four clicks" for all four
+  pillars, not just the two with a backend-provided ranking.
+- A ~55-point weekly trend (price-position, unfiltered) exposed that
+  `LineChart`'s point-spacing floor (24px, set in T25) still overflowed
+  its card — 1,392px in a 582px container. Lowered the floor to 3px:
+  there's no readability reason to protect a minimum pixel gap between
+  points (hover already snaps to the nearest point regardless of
+  spacing), unlike the label-width floor, which is a real constraint.
