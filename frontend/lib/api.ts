@@ -149,6 +149,7 @@ export interface PricePositionRow {
   sku_code: string;
   week: string;
   kestrel_mrp_inr: number;
+  competitor_mrp_inr: number | null;
   competitor_price_inr: number | null;
   competitor_price_min_inr: number | null;
   competitor_listing_count: number;

@@ -19,9 +19,13 @@ const BASE_MARGIN = { top: 16, right: 16, bottom: 28, left: 12 };
 // technically scrollable (overflow-x-auto) but the unscrolled view showed a
 // stray clipped label at the cutoff, reading as a bug. Scale spacing down
 // for longer series so a typical trend fits without scrolling; a sparse
-// series (few points) still gets the roomier max spacing.
+// series (few points) still gets the roomier max spacing. The floor is
+// deliberately tiny (not, say, 24px) — a ~55-point weekly series still blew
+// past a 24px floor into scroll territory, and hover already snaps to the
+// nearest point regardless of how tight the spacing is, so there's no
+// readability floor to protect the way there is for label width.
 const TARGET_PLOT_WIDTH = 480;
-const MIN_POINT_SPACING = 24;
+const MIN_POINT_SPACING = 3;
 const MAX_POINT_SPACING = 56;
 // Rough monospace-ish width estimate at fontSize 10 — avoids clipping wide
 // labels (currency in lakhs, percentages) against the SVG's own viewport,
@@ -64,6 +68,13 @@ export function LineChart({ data, valueFormat = (v) => v.toFixed(1), height = CH
       ? Math.min(MAX_POINT_SPACING, Math.max(MIN_POINT_SPACING, TARGET_PLOT_WIDTH / (data.length - 1)))
       : MAX_POINT_SPACING;
   const width = MARGIN.left + MARGIN.right + Math.max(data.length - 1, 1) * pointSpacing;
+
+  // Skip x-axis labels based on actual label width, not a fixed "every
+  // other" — a fixed rule undercounted for wide labels (full dates like
+  // "2026-05-06" collided at 8-9 points, where month labels like "2025-01"
+  // would have fit fine).
+  const maxLabelWidth = Math.max(...data.map((d) => d.label.length)) * CHAR_WIDTH_PX + 8;
+  const labelStride = Math.max(1, Math.ceil(maxLabelWidth / pointSpacing));
 
   const xFor = (i: number) => MARGIN.left + i * pointSpacing;
   const yFor = (v: number) => MARGIN.top + plotHeight - (v / maxValue) * plotHeight;
@@ -135,18 +146,24 @@ export function LineChart({ data, valueFormat = (v) => v.toFixed(1), height = CH
           );
         })}
 
-        {data.map((d, i) => (
-          <text
-            key={d.label}
-            x={xFor(i)}
-            y={height - MARGIN.bottom + 16}
-            textAnchor="middle"
-            fontSize={10}
-            fill="var(--viz-text-secondary)"
-          >
-            {data.length > 8 && i % 2 === 1 ? "" : d.label}
-          </text>
-        ))}
+        {data.map((d, i) => {
+          const isFirst = i === 0;
+          const isLast = i === data.length - 1;
+          const nearLast = !isLast && data.length - 1 - i < labelStride;
+          const show = isFirst || isLast || (i % labelStride === 0 && !nearLast);
+          return (
+            <text
+              key={d.label}
+              x={xFor(i)}
+              y={height - MARGIN.bottom + 16}
+              textAnchor="middle"
+              fontSize={10}
+              fill="var(--viz-text-secondary)"
+            >
+              {show ? d.label : ""}
+            </text>
+          );
+        })}
 
         <text
           x={xFor(data.length - 1)}
