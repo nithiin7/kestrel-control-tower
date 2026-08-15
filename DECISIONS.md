@@ -155,3 +155,21 @@ Updated as tasks land; will be trimmed/finalized at T29.
   snapshot (verified) — the log table is still created empty rather
   than being skipped, so a future data refresh with real discrepancies
   doesn't silently need new code.
+
+## mart_coldchain (T17)
+- **Grain mismatch, handled explicitly**: inventory has no route
+  dimension (stock sits in a warehouse, not on a route), so
+  `near_expiry_stock_value_inr` is a warehouse x month aggregate,
+  broadcast identically across every route under that warehouse for
+  that month — not a per-route allocation, since no finer key exists
+  to allocate it correctly. Same shape as fact_freight's warehouse x
+  route x month aggregate ratio (T12/T18). Documented on the column
+  itself so it isn't read as route-attributable.
+- Near-expiry stock is valued at the LAST `snapshot_date` of each
+  month, not summed across that month's ~4-5 weekly snapshots — it's a
+  stock level, not a flow, so summing every weekly snapshot would
+  count the same physical batches multiple times.
+- `fact_returns` has no warehouse_id/route_id of its own; cold-chain
+  return value is attributed via `fact_orders.order_id` (the order's
+  fulfillment warehouse/route) — zero orphaned `order_id`s verified,
+  so this join is safe.
