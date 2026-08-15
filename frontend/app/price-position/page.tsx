@@ -6,6 +6,7 @@ import { groupByAverage, sortByLabel } from "@/lib/aggregate";
 import { useFilters } from "@/lib/FilterContext";
 import { BarChart } from "@/components/charts/BarChart";
 import { LineChart } from "@/components/charts/LineChart";
+import { Card, CardHeading, ChartHeading, EmptyRow, ErrorBanner, PageHeader, Td, Th } from "@/components/ui";
 
 const WORST_N = 10;
 
@@ -34,67 +35,75 @@ export default function PricePositionPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-xl font-semibold">Price Position</h1>
-      <p className="text-sm text-gray-500">
-        Kestrel&apos;s MRP vs. the competitor listing&apos;s own MRP vs. what competitors are actually
-        charging (observed street price) — scoped to the 4 cities BazaarPulse covers.
-      </p>
+      <PageHeader
+        title="Price Position"
+        description={
+          <>
+            Kestrel&apos;s MRP vs. the competitor listing&apos;s own MRP vs. what competitors are actually charging
+            (observed street price) — scoped to the 4 cities BazaarPulse covers.
+          </>
+        }
+      />
 
-      {error && (
-        <div className="rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>
-      )}
+      {error && <ErrorBanner>{error}</ErrorBanner>}
 
-      <section className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm" style={{ opacity: loading ? 0.6 : 1 }}>
-        <h2 className="mb-2 text-lg font-semibold">Kestrel priced highest above competitor street price</h2>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-gray-200 text-left text-gray-500">
-              <th className="py-1 pr-3">SKU</th>
-              <th className="py-1 pr-3">City</th>
-              <th className="py-1 pr-3">Week</th>
-              <th className="py-1 pr-3 text-right bg-blue-50">Kestrel MRP</th>
-              <th className="py-1 pr-3 text-right bg-gray-100">Competitor MRP</th>
-              <th className="py-1 pr-3 text-right bg-amber-50">Competitor observed price</th>
-              <th className="py-1 text-right">Gap</th>
-            </tr>
-          </thead>
-          <tbody>
-            {mostOverpriced.map((r) => (
-              <tr key={`${r.city}-${r.sku_code}-${r.week}`} className="border-b border-gray-100">
-                <td className="py-1 pr-3">{r.sku_code}</td>
-                <td className="py-1 pr-3">{r.city}</td>
-                <td className="py-1 pr-3">{r.week}</td>
-                <td className="py-1 pr-3 text-right bg-blue-50/60">₹{r.kestrel_mrp_inr.toFixed(2)}</td>
-                <td className="py-1 pr-3 text-right bg-gray-50">
-                  {r.competitor_mrp_inr !== null ? `₹${r.competitor_mrp_inr.toFixed(2)}` : "—"}
-                </td>
-                <td className="py-1 pr-3 text-right bg-amber-50/60">
-                  {r.competitor_price_inr !== null ? `₹${r.competitor_price_inr.toFixed(2)}` : "—"}
-                </td>
-                <td className="py-1 text-right font-medium text-[#d03b3b]">+{r.gap_pct?.toFixed(1)}%</td>
+      <Card loading={loading}>
+        <CardHeading>Kestrel priced highest above competitor street price</CardHeading>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <Th>SKU</Th>
+                <Th>City</Th>
+                <Th>Week</Th>
+                <Th align="right" className="bg-blue-50">
+                  Kestrel MRP
+                </Th>
+                <Th align="right" className="bg-gray-100">
+                  Competitor MRP
+                </Th>
+                <Th align="right" className="bg-amber-50">
+                  Competitor observed price
+                </Th>
+                <Th align="right">Gap</Th>
               </tr>
-            ))}
-            {data && mostOverpriced.length === 0 && (
-              <tr>
-                <td colSpan={7} className="py-3 text-center text-gray-400">
-                  No rows match the current filters.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </section>
+            </thead>
+            <tbody>
+              {mostOverpriced.map((r) => (
+                <tr key={`${r.city}-${r.sku_code}-${r.week}`} className="border-b border-gray-100 hover:bg-gray-50">
+                  <Td className="font-medium text-gray-900">{r.sku_code}</Td>
+                  <Td className="text-gray-600">{r.city}</Td>
+                  <Td className="text-gray-600">{r.week}</Td>
+                  <Td align="right" className="bg-blue-50/60 text-gray-700">
+                    ₹{r.kestrel_mrp_inr.toFixed(2)}
+                  </Td>
+                  <Td align="right" className="bg-gray-50 text-gray-700">
+                    {r.competitor_mrp_inr !== null ? `₹${r.competitor_mrp_inr.toFixed(2)}` : "—"}
+                  </Td>
+                  <Td align="right" className="bg-amber-50/60 text-gray-700">
+                    {r.competitor_price_inr !== null ? `₹${r.competitor_price_inr.toFixed(2)}` : "—"}
+                  </Td>
+                  <Td align="right" className="font-semibold text-[#d03b3b]">
+                    +{r.gap_pct?.toFixed(1)}%
+                  </Td>
+                </tr>
+              ))}
+              {data && mostOverpriced.length === 0 && <EmptyRow colSpan={7} />}
+            </tbody>
+          </table>
+        </div>
+      </Card>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2" style={{ opacity: loading ? 0.6 : 1 }}>
-        <section className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-          <h2 className="mb-2 text-sm font-medium text-gray-500">MRP vs. street price gap trend (avg %, by week)</h2>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Card loading={loading}>
+          <ChartHeading>MRP vs. street price gap trend (avg %, by week)</ChartHeading>
           <LineChart data={trend} valueFormat={(v) => `${v.toFixed(0)}%`} />
-        </section>
+        </Card>
 
-        <section className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-          <h2 className="mb-2 text-sm font-medium text-gray-500">Gap by city (avg %)</h2>
+        <Card loading={loading}>
+          <ChartHeading>Gap by city (avg %)</ChartHeading>
           <BarChart data={byCity} valueFormat={(v) => `${v.toFixed(0)}%`} />
-        </section>
+        </Card>
       </div>
     </div>
   );

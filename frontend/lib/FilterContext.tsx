@@ -6,6 +6,7 @@ import type { QueryFilters } from "./api";
 interface FilterContextValue {
   filters: QueryFilters;
   setFilter: (key: keyof QueryFilters, value: string) => void;
+  resetFilters: () => void;
 }
 
 const FilterContext = createContext<FilterContextValue | null>(null);
@@ -25,7 +26,9 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const value = useMemo(() => ({ filters, setFilter }), [filters]);
+  const resetFilters = () => setFilters({});
+
+  const value = useMemo(() => ({ filters, setFilter, resetFilters }), [filters]);
 
   return <FilterContext.Provider value={value}>{children}</FilterContext.Provider>;
 }

@@ -30,7 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <FilterProvider>
           <Nav />
           <FilterBar />
-          <main className="flex-1 p-4">{children}</main>
+          <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-6">{children}</main>
         </FilterProvider>
       </body>
     </html>

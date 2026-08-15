@@ -6,6 +6,7 @@ import { groupByAverage, sortByLabel } from "@/lib/aggregate";
 import { useFilters } from "@/lib/FilterContext";
 import { BarChart } from "@/components/charts/BarChart";
 import { LineChart } from "@/components/charts/LineChart";
+import { Card, CardHeading, ChartHeading, EmptyRow, ErrorBanner, PageHeader, Td, Th } from "@/components/ui";
 
 const WORST_N = 10;
 
@@ -36,59 +37,57 @@ export default function MoneyPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-xl font-semibold">Money</h1>
+      <PageHeader title="Money" description="Freight cost per delivered case by route and warehouse." />
 
-      {error && (
-        <div className="rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>
-      )}
+      {error && <ErrorBanner>{error}</ErrorBanner>}
 
-      <section className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm" style={{ opacity: loading ? 0.6 : 1 }}>
-        <h2 className="mb-2 text-lg font-semibold">Highest freight cost per delivered case</h2>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-gray-200 text-left text-gray-500">
-              <th className="py-1 pr-3">Warehouse</th>
-              <th className="py-1 pr-3">Route</th>
-              <th className="py-1 pr-3">Month</th>
-              <th className="py-1 pr-3 text-right">Freight amount</th>
-              <th className="py-1 pr-3 text-right">Delivered cases</th>
-              <th className="py-1 text-right">₹ / case</th>
-            </tr>
-          </thead>
-          <tbody>
-            {worstRoutes.map((r) => (
-              <tr key={`${r.route_code}-${r.month}`} className="border-b border-gray-100">
-                <td className="py-1 pr-3">{r.warehouse_code}</td>
-                <td className="py-1 pr-3">{r.route_code}</td>
-                <td className="py-1 pr-3">{r.month}</td>
-                <td className="py-1 pr-3 text-right">₹{r.freight_amount_inr.toLocaleString("en-IN")}</td>
-                <td className="py-1 pr-3 text-right">{r.delivered_cases.toFixed(1)}</td>
-                <td className="py-1 text-right font-medium text-[#d03b3b]">
-                  ₹{r.freight_cost_per_case_inr?.toFixed(2)}
-                </td>
+      <Card loading={loading}>
+        <CardHeading>Highest freight cost per delivered case</CardHeading>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <Th>Warehouse</Th>
+                <Th>Route</Th>
+                <Th>Month</Th>
+                <Th align="right">Freight amount</Th>
+                <Th align="right">Delivered cases</Th>
+                <Th align="right">₹ / case</Th>
               </tr>
-            ))}
-            {data && worstRoutes.length === 0 && (
-              <tr>
-                <td colSpan={6} className="py-3 text-center text-gray-400">
-                  No rows match the current filters.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </section>
+            </thead>
+            <tbody>
+              {worstRoutes.map((r) => (
+                <tr key={`${r.route_code}-${r.month}`} className="border-b border-gray-100 hover:bg-gray-50">
+                  <Td className="font-medium text-gray-900">{r.warehouse_code}</Td>
+                  <Td className="text-gray-600">{r.route_code}</Td>
+                  <Td className="text-gray-600">{r.month}</Td>
+                  <Td align="right" className="text-gray-700">
+                    ₹{r.freight_amount_inr.toLocaleString("en-IN")}
+                  </Td>
+                  <Td align="right" className="text-gray-700">
+                    {r.delivered_cases.toFixed(1)}
+                  </Td>
+                  <Td align="right" className="font-semibold text-[#d03b3b]">
+                    ₹{r.freight_cost_per_case_inr?.toFixed(2)}
+                  </Td>
+                </tr>
+              ))}
+              {data && worstRoutes.length === 0 && <EmptyRow colSpan={6} />}
+            </tbody>
+          </table>
+        </div>
+      </Card>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2" style={{ opacity: loading ? 0.6 : 1 }}>
-        <section className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-          <h2 className="mb-2 text-sm font-medium text-gray-500">Freight cost per case trend (avg ₹, by month)</h2>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Card loading={loading}>
+          <ChartHeading>Freight cost per case trend (avg ₹, by month)</ChartHeading>
           <LineChart data={trend} valueFormat={(v) => `₹${v.toFixed(0)}`} />
-        </section>
+        </Card>
 
-        <section className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-          <h2 className="mb-2 text-sm font-medium text-gray-500">Freight cost per case by warehouse (avg ₹)</h2>
+        <Card loading={loading}>
+          <ChartHeading>Freight cost per case by warehouse (avg ₹)</ChartHeading>
           <BarChart data={byWarehouse} valueFormat={(v) => `₹${v.toFixed(0)}`} />
-        </section>
+        </Card>
       </div>
     </div>
   );
