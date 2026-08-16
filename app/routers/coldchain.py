@@ -10,6 +10,7 @@ import sqlite3
 from fastapi import APIRouter, Depends, Query
 
 from app.db import get_db
+from app.routers.filters import build_hierarchy_filters
 
 router = APIRouter()
 
@@ -26,32 +27,7 @@ def get_coldchain(
     date_to: str | None = Query(None),
     db: sqlite3.Connection = Depends(get_db),
 ) -> dict:
-    clauses = []
-    params: list = []
-
-    if region:
-        clauses.append(
-            "warehouse_id IN (SELECT w.warehouse_id FROM dim_warehouses w "
-            "JOIN dim_regions r ON w.region_id = r.region_id WHERE r.region_name = ?)"
-        )
-        params.append(region)
-    if warehouse:
-        clauses.append("warehouse_code = ?")
-        params.append(warehouse)
-    if outlet:
-        clauses.append("route_id IN (SELECT route_id FROM dim_outlets WHERE outlet_code = ?)")
-        params.append(outlet)
-    if route:
-        clauses.append("route_code = ?")
-        params.append(route)
-    if date_from:
-        clauses.append("month >= ?")
-        params.append(date_from[:7])
-    if date_to:
-        clauses.append("month <= ?")
-        params.append(date_to[:7])
-
-    where = ("WHERE " + " AND ".join(clauses)) if clauses else ""
+    where, params = build_hierarchy_filters(region, warehouse, route, outlet, date_from, date_to)
 
     rows = [dict(row) for row in db.execute(f"SELECT * FROM mart_coldchain {where} ORDER BY month, route_code", params)]
     worst_routes = [
