@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { getService, type ServiceResponse } from "@/lib/api";
 import { groupByAverage, sortByLabel } from "@/lib/aggregate";
+import { useApiData } from "@/lib/useApiData";
 import { useFilters } from "@/lib/FilterContext";
 import { BarChart } from "@/components/charts/BarChart";
 import { LineChart } from "@/components/charts/LineChart";
@@ -10,20 +10,7 @@ import { Card, CardHeading, ChartHeading, EmptyRow, ErrorBanner, PageHeader, Td,
 
 export default function ServicePage() {
   const { filters } = useFilters();
-  const [data, setData] = useState<ServiceResponse | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setLoading(true);
-    getService(filters)
-      .then((res) => {
-        setData(res);
-        setError(null);
-      })
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [filters]);
+  const { data, loading, error } = useApiData<ServiceResponse>(() => getService(filters), [filters]);
 
   const trend = data
     ? sortByLabel(groupByAverage(data.rows, (r) => r.month, (r) => r.fill_rate_eaches))

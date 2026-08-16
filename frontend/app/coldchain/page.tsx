@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { getColdchain, type ColdchainResponse } from "@/lib/api";
 import { groupByAverage, sortByLabel } from "@/lib/aggregate";
+import { useApiData } from "@/lib/useApiData";
 import { useFilters } from "@/lib/FilterContext";
 import { BarChart } from "@/components/charts/BarChart";
 import { LineChart } from "@/components/charts/LineChart";
@@ -10,20 +10,7 @@ import { Card, CardHeading, ChartHeading, EmptyRow, ErrorBanner, PageHeader, Td,
 
 export default function ColdchainPage() {
   const { filters } = useFilters();
-  const [data, setData] = useState<ColdchainResponse | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setLoading(true);
-    getColdchain(filters)
-      .then((res) => {
-        setData(res);
-        setError(null);
-      })
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [filters]);
+  const { data, loading, error } = useApiData<ColdchainResponse>(() => getColdchain(filters), [filters]);
 
   const trend = data
     ? sortByLabel(groupByAverage(data.rows, (r) => r.month, (r) => r.excursions_per_100_chilled_deliveries))

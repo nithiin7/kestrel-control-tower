@@ -27,3 +27,10 @@ export function groupBySum<T>(rows: T[], keyFn: (row: T) => string, valueFn: (ro
 export function sortByLabel(rows: Datum[]): Datum[] {
   return [...rows].sort((a, b) => a.label.localeCompare(b.label));
 }
+
+export function topNByValue<T>(rows: T[], valueFn: (row: T) => number | null, n: number): T[] {
+  return rows
+    .filter((row) => valueFn(row) !== null)
+    .sort((a, b) => (valueFn(b) as number) - (valueFn(a) as number))
+    .slice(0, n);
+}

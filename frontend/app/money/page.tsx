@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { getMoney, type MoneyResponse, type MoneyRow } from "@/lib/api";
-import { groupByAverage, sortByLabel } from "@/lib/aggregate";
+import { groupByAverage, sortByLabel, topNByValue } from "@/lib/aggregate";
+import { useApiData } from "@/lib/useApiData";
 import { useFilters } from "@/lib/FilterContext";
 import { BarChart } from "@/components/charts/BarChart";
 import { LineChart } from "@/components/charts/LineChart";
@@ -12,25 +12,10 @@ const WORST_N = 10;
 
 export default function MoneyPage() {
   const { filters } = useFilters();
-  const [data, setData] = useState<MoneyResponse | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setLoading(true);
-    getMoney(filters)
-      .then((res) => {
-        setData(res);
-        setError(null);
-      })
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [filters]);
+  const { data, loading, error } = useApiData<MoneyResponse>(() => getMoney(filters), [filters]);
 
   const priced: MoneyRow[] = data ? data.rows.filter((r) => r.freight_cost_per_case_inr !== null) : [];
-  const worstRoutes = [...priced]
-    .sort((a, b) => (b.freight_cost_per_case_inr ?? 0) - (a.freight_cost_per_case_inr ?? 0))
-    .slice(0, WORST_N);
+  const worstRoutes = topNByValue(priced, (r) => r.freight_cost_per_case_inr, WORST_N);
 
   const trend = sortByLabel(groupByAverage(priced, (r) => r.month, (r) => r.freight_cost_per_case_inr as number));
   const byWarehouse = groupByAverage(priced, (r) => r.warehouse_code, (r) => r.freight_cost_per_case_inr as number);

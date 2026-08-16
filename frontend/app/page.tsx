@@ -13,6 +13,7 @@ import {
   type PricePositionRow,
   type ServiceRow,
 } from "@/lib/api";
+import { topNByValue } from "@/lib/aggregate";
 import { Card, ErrorBanner } from "@/components/ui";
 
 interface WorstOfWorst {
@@ -36,15 +37,8 @@ export default function Home() {
 
     Promise.all([getService(), getColdchain(), getMoney(), getPricePosition()])
       .then(([service, coldchain, money, price]) => {
-        const worstMoneyRoutes = [...money.rows]
-          .filter((r) => r.freight_cost_per_case_inr !== null)
-          .sort((a, b) => (b.freight_cost_per_case_inr ?? 0) - (a.freight_cost_per_case_inr ?? 0))
-          .slice(0, TOP_N);
-
-        const worstPricePositions = [...price.rows]
-          .filter((r) => r.gap_pct !== null)
-          .sort((a, b) => (b.gap_pct ?? 0) - (a.gap_pct ?? 0))
-          .slice(0, TOP_N);
+        const worstMoneyRoutes = topNByValue(money.rows, (r) => r.freight_cost_per_case_inr, TOP_N);
+        const worstPricePositions = topNByValue(price.rows, (r) => r.gap_pct, TOP_N);
 
         setWorst({
           worstOutlets: service.worst_outlets.slice(0, TOP_N),

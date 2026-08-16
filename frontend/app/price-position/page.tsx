@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { getPricePosition, type PricePositionResponse, type PricePositionRow } from "@/lib/api";
-import { groupByAverage, sortByLabel } from "@/lib/aggregate";
+import { groupByAverage, sortByLabel, topNByValue } from "@/lib/aggregate";
+import { useApiData } from "@/lib/useApiData";
 import { useFilters } from "@/lib/FilterContext";
 import { BarChart } from "@/components/charts/BarChart";
 import { LineChart } from "@/components/charts/LineChart";
@@ -12,23 +12,10 @@ const WORST_N = 10;
 
 export default function PricePositionPage() {
   const { filters } = useFilters();
-  const [data, setData] = useState<PricePositionResponse | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setLoading(true);
-    getPricePosition(filters)
-      .then((res) => {
-        setData(res);
-        setError(null);
-      })
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [filters]);
+  const { data, loading, error } = useApiData<PricePositionResponse>(() => getPricePosition(filters), [filters]);
 
   const rows: PricePositionRow[] = data ? data.rows.filter((r) => r.gap_pct !== null) : [];
-  const mostOverpriced = [...rows].sort((a, b) => (b.gap_pct ?? 0) - (a.gap_pct ?? 0)).slice(0, WORST_N);
+  const mostOverpriced = topNByValue(rows, (r) => r.gap_pct, WORST_N);
 
   const trend = sortByLabel(groupByAverage(rows, (r) => r.week, (r) => r.gap_pct as number));
   const byCity = groupByAverage(rows, (r) => r.city, (r) => r.gap_pct as number);
