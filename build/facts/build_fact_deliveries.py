@@ -26,9 +26,9 @@ actual_arrival_ts vs. planned_arrival is used as ground truth per this
 task's own instruction, not the noisy stored column.
 
 Deliveries linked to test/excluded outlets (via order_id -> outlet,
-per dim_outlets from T2) are dropped, matching every other
-outlet-scoped fact table. Does not depend on fact_orders (T6) — reads
-the order->outlet path from the raw source DB directly.
+per dim_outlets) are dropped, matching every other outlet-scoped fact
+table. Does not depend on fact_orders — reads the order->outlet path
+from the raw source DB directly.
 
 Idempotent: re-running drops and rebuilds the table.
 """
@@ -203,7 +203,7 @@ def main() -> int:
             "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?", (table,)
         ).fetchone()[0]
         if not exists:
-            print(f"ERROR: {table} not found in {ANALYTICS_DB_PATH} — run its build script first (T2/T4/T5).")
+            print(f"ERROR: {table} not found in {ANALYTICS_DB_PATH} — run its build script first.")
             return 1
 
     try:

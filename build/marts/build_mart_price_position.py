@@ -5,18 +5,18 @@ Run: python build/marts/build_mart_price_position.py
 
 Grain: city x category x sku_code x week. "Week" is the weekly
 observation date itself from BazaarPulse's own "Observed price history"
-child table (T14) — those dates are already the natural weekly grain
-(confirmed 7-day spacing), so they're used directly rather than
-re-bucketed into ISO weeks.
+child table (parsed by build/external/parse_bazaarpulse.py) — those dates
+are already the natural weekly grain (confirmed 7-day spacing), so
+they're used directly rather than re-bucketed into ISO weeks.
 
 Only bridge_bazaarpulse_sku_match rows with a non-null sku_code (i.e.
-matched at/above T15's confidence threshold) are included — an
-unmatched listing has no Kestrel MRP to compare against, so it can't
-produce a gap_pct at all. category comes from dim_products (the SKU's
-real Kestrel category), not the BazaarPulse listing's own breadcrumb
-category text.
+matched at/above match_bazaarpulse_skus.py's confidence threshold) are
+included — an unmatched listing has no Kestrel MRP to compare against,
+so it can't produce a gap_pct at all. category comes from dim_products
+(the SKU's real Kestrel category), not the BazaarPulse listing's own
+breadcrumb category text.
 
-Competitor price uses the weekly history series (T14: "always plain
+Competitor price uses the weekly history series ("always plain
 rupee-entity format regardless of city... the cleaner series for
 trend/comparison"), never the noisier per-city-markup "current price"
 line. Multiple retailers can list the same SKU in the same city in the
@@ -230,7 +230,7 @@ def main() -> int:
             "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?", (table,)
         ).fetchone()[0]
         if not exists:
-            print(f"ERROR: {table} not found in {ANALYTICS_DB_PATH} — run its build script first (T3/T15).")
+            print(f"ERROR: {table} not found in {ANALYTICS_DB_PATH} — run its build script first.")
             return 1
 
     try:

@@ -154,7 +154,7 @@ cleanly — nothing is left running in the background.
 
 - **Port already in use**: something else is bound to 8000, 8080, 8088, or
   3000. Find and stop it (`lsof -i :8000`, etc.) before retrying.
-- **`make build` fails immediately with a "T1 profiling assertion regressed"
+- **`make build` fails immediately with a "profiling assertion regressed"
   error**: the source `data/kestrel_ops.db` doesn't match what the pipeline
   expects (wrong file, or a different snapshot). Confirm you placed the
   exact supplied file at `data/kestrel_ops.db`.

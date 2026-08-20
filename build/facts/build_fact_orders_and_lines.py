@@ -24,8 +24,8 @@ mismatch) was checked against this snapshot and does not reproduce here
 — line-level is still used since it's the more granular source and the
 data dictionary's general guidance either way.
 
-Lines belonging to test/excluded outlets (per dim_outlets, built by T2)
-are dropped, matching every other outlet-scoped fact table.
+Lines belonging to test/excluded outlets (per dim_outlets) are dropped,
+matching every other outlet-scoped fact table.
 
 Idempotent: re-running drops and rebuilds both tables.
 """
@@ -309,7 +309,7 @@ def main() -> int:
             "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?", (table,)
         ).fetchone()[0]
         if not exists:
-            print(f"ERROR: {table} not found in {ANALYTICS_DB_PATH} — run its build script first (T2-T5).")
+            print(f"ERROR: {table} not found in {ANALYTICS_DB_PATH} — run its build script first.")
             return 1
 
     try:

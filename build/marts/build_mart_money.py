@@ -15,20 +15,20 @@ because "delivered case" is literally about the delivery event.
 
 **This is necessarily an aggregate ratio, not a per-shipment cost.**
 The partner freight API has no delivery- or order-level key on an
-invoice — only warehouse_code/route_code (see T12) — so there is no
+invoice — only warehouse_code/route_code (see fact_freight) — so there is no
 correct way to allocate a specific invoice's cost to a specific
 delivery or order. Bucketing both sides into the same warehouse x
 route x month bucket is the finest grain that's actually defensible.
 
 **Two measures from the brief don't share that grain, so they're NOT
 force-fit into it** (same approach as mart_coldchain's near-expiry
-column, T17) — each gets its own satellite table instead of a
+column) — each gets its own satellite table instead of a
 misleading broadcast or a fabricated join:
 
 mart_money_returns_by_category (grain: category x month) — returns as
 % of dispatch value. Dispatch value is fact_order_lines.line_value_inr
 for DELIVERED/PARTIAL orders only (CANCELLED never dispatched — same
-judgment call as mart_service, T16), summed by category and the
+judgment call as mart_service), summed by category and the
 order's month. Returns value is fact_returns.credit_note_value_inr
 summed by category and the return's own month. Category has no
 warehouse/route dimension in this data model (SKUs aren't
@@ -269,7 +269,7 @@ def main() -> int:
             "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?", (table,)
         ).fetchone()[0]
         if not exists:
-            print(f"ERROR: {table} not found in {ANALYTICS_DB_PATH} — run its build script first (T6/T9/T12).")
+            print(f"ERROR: {table} not found in {ANALYTICS_DB_PATH} — run its build script first.")
             return 1
 
     try:

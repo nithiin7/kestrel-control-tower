@@ -28,33 +28,33 @@ sys.path.insert(0, str(REPO_ROOT))
 from build.assertions import run_all as run_source_assertions
 from config.settings import SOURCE_DB_PATH
 
-# Dependency order: dims (T2-T5) -> facts (T6-T9) -> external ingestion
-# (T10-T15, freight then BazaarPulse, each internally sequential) -> marts
-# (T16-T19, which read from both facts and external tables).
+# Dependency order: dims -> facts -> external ingestion (freight then
+# BazaarPulse, each internally sequential) -> marts (which read from both
+# facts and external tables).
 STEPS = [
-    ("dim_outlets (T2)", "build/dims/build_dim_outlets.py"),
-    ("dim_products (T3)", "build/dims/build_dim_products.py"),
-    ("dim_warehouses/dim_routes/dim_regions (T4)", "build/dims/build_dim_warehouses_routes_regions.py"),
-    ("dim_date (T5)", "build/dims/build_dim_date.py"),
-    ("fact_orders/fact_order_lines (T6)", "build/facts/build_fact_orders_and_lines.py"),
-    ("fact_deliveries (T7)", "build/facts/build_fact_deliveries.py"),
-    ("fact_inventory_snapshots (T8)", "build/facts/build_fact_inventory_snapshots.py"),
-    ("fact_returns (T9)", "build/facts/build_fact_returns.py"),
-    ("dim_carriers + fuel_surcharge_reference (T10)", "build/external/build_dim_carriers.py"),
-    ("raw_freight_invoices ingest (T11)", "build/external/ingest_freight_invoices.py"),
-    ("fact_freight (T12)", "build/external/build_fact_freight.py"),
-    ("BazaarPulse crawl (T13)", "build/external/scrape_bazaarpulse.py"),
-    ("BazaarPulse parse (T14)", "build/external/parse_bazaarpulse.py"),
-    ("BazaarPulse SKU match (T15)", "build/external/match_bazaarpulse_skus.py"),
-    ("mart_service (T16)", "build/marts/build_mart_service.py"),
-    ("mart_coldchain (T17)", "build/marts/build_mart_coldchain.py"),
-    ("mart_money (T18)", "build/marts/build_mart_money.py"),
-    ("mart_price_position (T19)", "build/marts/build_mart_price_position.py"),
+    ("dim_outlets", "build/dims/build_dim_outlets.py"),
+    ("dim_products", "build/dims/build_dim_products.py"),
+    ("dim_warehouses/dim_routes/dim_regions", "build/dims/build_dim_warehouses_routes_regions.py"),
+    ("dim_date", "build/dims/build_dim_date.py"),
+    ("fact_orders/fact_order_lines", "build/facts/build_fact_orders_and_lines.py"),
+    ("fact_deliveries", "build/facts/build_fact_deliveries.py"),
+    ("fact_inventory_snapshots", "build/facts/build_fact_inventory_snapshots.py"),
+    ("fact_returns", "build/facts/build_fact_returns.py"),
+    ("dim_carriers + fuel_surcharge_reference", "build/external/build_dim_carriers.py"),
+    ("raw_freight_invoices ingest", "build/external/ingest_freight_invoices.py"),
+    ("fact_freight", "build/external/build_fact_freight.py"),
+    ("BazaarPulse crawl", "build/external/scrape_bazaarpulse.py"),
+    ("BazaarPulse parse", "build/external/parse_bazaarpulse.py"),
+    ("BazaarPulse SKU match", "build/external/match_bazaarpulse_skus.py"),
+    ("mart_service", "build/marts/build_mart_service.py"),
+    ("mart_coldchain", "build/marts/build_mart_coldchain.py"),
+    ("mart_money", "build/marts/build_mart_money.py"),
+    ("mart_price_position", "build/marts/build_mart_price_position.py"),
 ]
 
 
-def run_t1_guard() -> None:
-    print("== T1 regression guard (build/assertions.py) ==")
+def run_source_regression_guard() -> None:
+    print("== source-data regression guard (build/assertions.py) ==")
     if not SOURCE_DB_PATH.exists():
         print(f"ERROR: source DB not found at {SOURCE_DB_PATH}")
         sys.exit(1)
@@ -66,7 +66,7 @@ def run_t1_guard() -> None:
         conn.close()
 
     if failures:
-        print(f"FAILED: {len(failures)} T1 profiling assertion(s) regressed against {SOURCE_DB_PATH}:")
+        print(f"FAILED: {len(failures)} profiling assertion(s) regressed against {SOURCE_DB_PATH}:")
         for f in failures:
             print(f"  - {f}")
         print("\nEvery downstream build script assumes these hold — stopping before touching analytics.db.")
@@ -89,7 +89,7 @@ def run_step(label: str, script: str) -> None:
 
 def main() -> int:
     pipeline_start = time.monotonic()
-    run_t1_guard()
+    run_source_regression_guard()
     for label, script in STEPS:
         run_step(label, script)
 

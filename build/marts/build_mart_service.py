@@ -203,7 +203,7 @@ def main() -> int:
             "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?", (table,)
         ).fetchone()[0]
         if not exists:
-            print(f"ERROR: {table} not found in {ANALYTICS_DB_PATH} — run its build script first (T2/T4/T6/T7).")
+            print(f"ERROR: {table} not found in {ANALYTICS_DB_PATH} — run its build script first.")
             return 1
 
     try:

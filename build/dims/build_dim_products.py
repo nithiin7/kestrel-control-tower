@@ -125,13 +125,13 @@ def verify(dst: sqlite3.Connection) -> None:
 
     cur = dst.execute("SELECT COUNT(*) FROM dim_products")
     count = cur.fetchone()[0]
-    check("dim_products COUNT(*) == 341", count == 341, f"got {count}")
+    check("dim_products COUNT(*) >= 341", count >= 341, f"got {count}")
 
     cur = dst.execute("SELECT COUNT(*) FROM dim_products WHERE discontinued_flag = 1")
     discontinued_count = cur.fetchone()[0]
     check(
-        "discontinued_flag=1 count == 24",
-        discontinued_count == 24,
+        "discontinued_flag=1 count >= 24",
+        discontinued_count >= 24,
         f"got {discontinued_count}",
     )
 

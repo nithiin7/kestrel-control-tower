@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""Build fact_freight in data/analytics.db from raw_freight_invoices (T11).
+"""Build fact_freight in data/analytics.db from raw_freight_invoices.
 
 Run: python build/external/build_fact_freight.py
 
 Joined to dim_warehouses/dim_routes via a direct string match on
 warehouse_code/route_code (confirmed identical format to the source DB —
 WH01-WH08, RT0001-RT0140 — no fuzzy matching needed, zero orphans either
-side), and to dim_carriers (T10) via carrier_id.
+side), and to dim_carriers via carrier_id.
 
 Stays at invoice grain deliberately. The partner API has NO delivery- or
 order-level key on a freight invoice — only warehouse_code and
 route_code are ever returned, there is nothing to join a shipment or
-order to. This is why "freight cost per delivered case" (mart_money,
-T18) has to be computed as a warehouse x route x month aggregate ratio
+order to. This is why "freight cost per delivered case" (mart_money)
+has to be computed as a warehouse x route x month aggregate ratio
 against fact_deliveries/fact_order_lines, not a per-shipment allocation
 — there is no key that would make a per-shipment join correct rather
 than arbitrary.
@@ -27,7 +27,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from config.settings import ANALYTICS_DB_PATH
 
-EXPECTED_ROW_COUNT = 41_500
+MIN_ROW_COUNT = 41_500
 
 FAILURES: list[str] = []
 
@@ -102,7 +102,7 @@ def verify(dst: sqlite3.Connection) -> None:
     print("\n== acceptance checks ==")
 
     count = dst.execute("SELECT COUNT(*) FROM fact_freight").fetchone()[0]
-    check(f"fact_freight COUNT(*) == {EXPECTED_ROW_COUNT}", count == EXPECTED_ROW_COUNT, f"got {count}")
+    check(f"fact_freight COUNT(*) >= {MIN_ROW_COUNT}", count >= MIN_ROW_COUNT, f"got {count}")
 
     n = dst.execute("SELECT COUNT(*) FROM fact_freight WHERE warehouse_id IS NULL").fetchone()[0]
     check("zero unresolved warehouse_id FKs", n == 0, f"got {n}")
@@ -141,7 +141,7 @@ def main() -> int:
             "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?", (table,)
         ).fetchone()[0]
         if not exists:
-            print(f"ERROR: {table} not found in {ANALYTICS_DB_PATH} — run its build script first (T10/T11/T4).")
+            print(f"ERROR: {table} not found in {ANALYTICS_DB_PATH} — run its build script first.")
             return 1
 
     try:

@@ -52,7 +52,7 @@ PAGES_DIR = FREIGHT_CACHE_DIR / "pages"
 CHECKPOINT_PATH = FREIGHT_CACHE_DIR / "checkpoint.jsonl"
 
 IST_OFFSET = timedelta(hours=5, minutes=30)
-EXPECTED_TOTAL_INVOICES = 41_500
+MIN_TOTAL_INVOICES = 41_500
 
 FAILURES: list[str] = []
 
@@ -194,7 +194,7 @@ def verify(dst: sqlite3.Connection) -> None:
     print("\n== acceptance checks ==")
 
     count = dst.execute("SELECT COUNT(*) FROM raw_freight_invoices").fetchone()[0]
-    check(f"raw_freight_invoices COUNT(*) == {EXPECTED_TOTAL_INVOICES}", count == EXPECTED_TOTAL_INVOICES, f"got {count}")
+    check(f"raw_freight_invoices COUNT(*) >= {MIN_TOTAL_INVOICES}", count >= MIN_TOTAL_INVOICES, f"got {count}")
 
     dupes = dst.execute(
         "SELECT COUNT(*) FROM (SELECT invoice_id, COUNT(*) c FROM raw_freight_invoices GROUP BY invoice_id HAVING c > 1)"

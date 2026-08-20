@@ -10,8 +10,9 @@ that doesn't require auth on the mock server). Retries on:
 Chaos (429/503) is only injected on /v1/freight_invoices and
 /v1/shipment_events (~15.1% combined) — /v1/health, /v1/carriers, and
 /v1/fuel_surcharge never fail. The retry logic still lives here rather
-than being scoped to just the chaotic endpoints, since T11's cursor-walk
-ingest of /v1/freight_invoices reuses this same client.
+than being scoped to just the chaotic endpoints, since the freight
+invoices ingest's cursor-walk of /v1/freight_invoices reuses this same
+client.
 """
 
 import random

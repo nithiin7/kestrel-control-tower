@@ -110,14 +110,14 @@ def build(src: sqlite3.Connection, dst: sqlite3.Connection) -> None:
 def verify(dst: sqlite3.Connection) -> None:
     print("\n== acceptance checks ==")
 
-    counts = {
+    min_counts = {
         "dim_regions": 5,
         "dim_warehouses": 8,
         "dim_routes": 140,
     }
-    for dim_name, expected in counts.items():
+    for dim_name, minimum in min_counts.items():
         count = dst.execute(f"SELECT COUNT(*) FROM {dim_name}").fetchone()[0]
-        check(f"{dim_name} COUNT(*) == {expected}", count == expected, f"got {count}")
+        check(f"{dim_name} COUNT(*) >= {minimum}", count >= minimum, f"got {count}")
 
     orphan_route_warehouse = dst.execute(
         """

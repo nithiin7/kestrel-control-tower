@@ -26,7 +26,7 @@ were never asserted as temperature-related. Kept as a separate
 cold_chain_secondary_signal_flag instead of merging it, so downstream
 marts can choose to use it without corrupting the primary metric.
 
-Excludes returns linked to test/excluded outlets (via dim_outlets, T2).
+Excludes returns linked to test/excluded outlets (via dim_outlets).
 
 Idempotent: re-running drops and rebuilds the table.
 """
@@ -217,7 +217,7 @@ def main() -> int:
             "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?", (table,)
         ).fetchone()[0]
         if not exists:
-            print(f"ERROR: {table} not found in {ANALYTICS_DB_PATH} — run its build script first (T2/T3/T5).")
+            print(f"ERROR: {table} not found in {ANALYTICS_DB_PATH} — run its build script first.")
             return 1
 
     try:

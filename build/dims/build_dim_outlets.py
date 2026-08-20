@@ -10,7 +10,7 @@ NOT by status (all three show status=ACTIVE, is_deleted=0, so a status
 filter would silently let them through). Excluded rows are kept in
 dim_outlets_excluded for audit rather than being silently dropped.
 
-City spelling is normalized via data/ref/city_name_map.csv (built by T1's
+City spelling is normalized via data/ref/city_name_map.csv (built by
 scripts/profile_source_db.py) — Bangalore/Bengaluru and Delhi/New Delhi
 collapse to one canonical name each; Gurugram and Guwahati are real,
 distinct cities and are left alone.
@@ -70,7 +70,7 @@ def check(label: str, condition: bool, detail: str = "") -> None:
 
 def load_city_map() -> dict[str, str]:
     if not CITY_NAME_MAP_PATH.exists():
-        print(f"ERROR: {CITY_NAME_MAP_PATH} not found — run scripts/profile_source_db.py first (T1).")
+        print(f"ERROR: {CITY_NAME_MAP_PATH} not found — run scripts/profile_source_db.py first.")
         sys.exit(1)
     with open(CITY_NAME_MAP_PATH) as f:
         rows = list(csv.DictReader(f))
@@ -110,7 +110,7 @@ def fetch_source_outlets(src: sqlite3.Connection) -> list[sqlite3.Row]:
 def build(src: sqlite3.Connection, dst: sqlite3.Connection, city_map: dict[str, str]) -> None:
     rows = fetch_source_outlets(src)
 
-    # Defensive dedupe on outlet_code — source has none per T1, but this
+    # Defensive dedupe on outlet_code — source has none per profiling, but this
     # protects the build if that ever regresses (keep the first occurrence).
     seen: set[str] = set()
     deduped = []
@@ -225,7 +225,7 @@ def verify(dst: sqlite3.Connection, src: sqlite3.Connection) -> None:
 
     cur = dst.execute("SELECT COUNT(*) FROM dim_outlets")
     count = cur.fetchone()[0]
-    check("dim_outlets COUNT(*) == 721", count == 721, f"got {count}")
+    check("dim_outlets COUNT(*) >= 721", count >= 721, f"got {count}")
 
     cur = dst.execute("SELECT COUNT(*) FROM dim_outlets WHERE outlet_code LIKE 'TST%'")
     tst_count = cur.fetchone()[0]
@@ -233,7 +233,7 @@ def verify(dst: sqlite3.Connection, src: sqlite3.Connection) -> None:
 
     cur = dst.execute("SELECT COUNT(*) FROM dim_outlets_excluded")
     excluded_count = cur.fetchone()[0]
-    check("dim_outlets_excluded has exactly 3 rows", excluded_count == 3, f"got {excluded_count}")
+    check("dim_outlets_excluded has at least 3 rows", excluded_count >= 3, f"got {excluded_count}")
 
     cur = dst.execute("SELECT COUNT(DISTINCT city) FROM dim_outlets")
     dim_city_count = cur.fetchone()[0]

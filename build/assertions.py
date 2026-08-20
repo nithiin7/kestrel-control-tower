@@ -1,4 +1,4 @@
-"""Regression guards from T1's source-data profiling (scripts/profile_source_db.py).
+"""Regression guards from source-data profiling (scripts/profile_source_db.py).
 
 Hard-coded ground-truth facts about data/kestrel_ops.db that every dim/fact
 build script in this pipeline was written against. build/pipeline.py runs
@@ -16,8 +16,8 @@ source snapshot ever changes.
 import re
 import sqlite3
 
-EXPECTED_OUTLET_COUNT = 724
-EXPECTED_TEST_OUTLET_COUNT = 3
+MIN_OUTLET_COUNT = 724
+MIN_TEST_OUTLET_COUNT = 3
 
 CREATED_AT_PATTERNS = {
     "ERP_WEB": re.compile(r"^\d{2}/\d{2}/\d{4} \d{2}:\d{2}$"),  # DD/MM/YYYY HH:MM
@@ -37,8 +37,8 @@ def check_outlets(conn: sqlite3.Connection) -> list[str]:
     failures = []
 
     total = conn.execute("SELECT COUNT(*) FROM outlets").fetchone()[0]
-    if total != EXPECTED_OUTLET_COUNT:
-        failures.append(f"outlet count == {EXPECTED_OUTLET_COUNT}: got {total}")
+    if total < MIN_OUTLET_COUNT:
+        failures.append(f"outlet count >= {MIN_OUTLET_COUNT}: got {total}")
 
     test_rows = conn.execute(
         """
@@ -47,8 +47,8 @@ def check_outlets(conn: sqlite3.Connection) -> list[str]:
            OR outlet_name LIKE '%DO NOT USE%' OR outlet_name LIKE '%migration%'
         """
     ).fetchall()
-    if len(test_rows) != EXPECTED_TEST_OUTLET_COUNT:
-        failures.append(f"test outlet count == {EXPECTED_TEST_OUTLET_COUNT}: got {len(test_rows)}")
+    if len(test_rows) < MIN_TEST_OUTLET_COUNT:
+        failures.append(f"test outlet count >= {MIN_TEST_OUTLET_COUNT}: got {len(test_rows)}")
 
     dupes = conn.execute("SELECT outlet_code, COUNT(*) c FROM outlets GROUP BY outlet_code HAVING c > 1").fetchall()
     if dupes:

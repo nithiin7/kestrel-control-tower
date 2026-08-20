@@ -24,8 +24,8 @@ column is a warehouse x month aggregate, broadcast identically across
 every route under that warehouse for that month. It is NOT a
 per-route allocation; treat it as "this warehouse's near-expiry
 exposure," not "this route's." Same pattern as fact_freight's
-warehouse x route x month aggregate ratio (T12/T18) — no finer key
-exists to allocate it correctly, so it isn't invented.
+warehouse x route x month aggregate ratio (fact_freight/mart_money) —
+no finer key exists to allocate it correctly, so it isn't invented.
 
 cold_chain_return_value_inr: fact_returns (cold_chain_caused_flag=1)
 joined to fact_orders by order_id to pick up warehouse_id/route_id
@@ -204,7 +204,7 @@ def main() -> int:
             "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?", (table,)
         ).fetchone()[0]
         if not exists:
-            print(f"ERROR: {table} not found in {ANALYTICS_DB_PATH} — run its build script first (T3/T4/T6/T7/T8/T9).")
+            print(f"ERROR: {table} not found in {ANALYTICS_DB_PATH} — run its build script first.")
             return 1
 
     try:

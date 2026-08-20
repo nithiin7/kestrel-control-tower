@@ -24,9 +24,9 @@ match against the wrong pack size is actively dangerous downstream
 across different pack sizes), so a candidate is only eligible to match
 at all if its (value, uom) agrees exactly with the listing's parsed
 pack size. Pack size is read from the structured pack_size_text column
-(T14) when present; title-text parsing is a fallback for if that's ever
-missing (never triggers in this snapshot, see T9's identical pattern
-for case_pack).
+(from build/external/parse_bazaarpulse.py) when present; title-text
+parsing is a fallback for if that's ever missing (never triggers in
+this snapshot, see fact_returns' identical pattern for case_pack).
 
 Confidence threshold (NAME_MATCH_THRESHOLD, 90) is applied to the name
 score of the best PACK-MATCHING candidate only. Below it — or if no
@@ -44,7 +44,7 @@ external competitors. So every BazaarPulse listing, regardless of which
 of those 6 brands it shows, is tracking one of Kestrel's OWN SKUs sold
 through a different retailer — this is an MAP/retail-price-variance
 monitor, not real inter-company competitor pricing. Reframes what
-"competitor observed price" in mart_price_position (T19) actually
+"competitor observed price" in mart_price_position actually
 means; see DECISIONS.md.
 """
 
@@ -242,7 +242,7 @@ def main() -> int:
             "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?", (table,)
         ).fetchone()[0]
         if not exists:
-            print(f"ERROR: {table} not found in {ANALYTICS_DB_PATH} — run its build script first (T14/T3).")
+            print(f"ERROR: {table} not found in {ANALYTICS_DB_PATH} — run its build script first.")
             return 1
 
     try:

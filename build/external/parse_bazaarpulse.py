@@ -2,7 +2,8 @@
 """BazaarPulse parser — per-city price extraction + weekly history.
 
 Run: python build/external/parse_bazaarpulse.py
-(requires the mock site served on :8080; reads T13's discovered URL list)
+(requires the mock site served on :8080; reads the discovered URL list
+from build/external/scrape_bazaarpulse.py)
 
 The site uses 4 different price markups, one per city, and dispatch is
 done structurally (which markup is actually present on the page) rather
@@ -41,7 +42,7 @@ regardless of city and is the cleaner series for trend/comparison
 (vs. the noisy, differently-marked-up "current price" line) —
 stored as a child table, raw_bazaarpulse_price_history.
 
-3 of the 1,137 URLs discovered by T13 404 (dead links in the listing
+3 of the 1,137 URLs discovered by the crawl step 404 (dead links in the listing
 pages, confirmed not a crawl bug — see DECISIONS.md) — skipped with a
 warning, not treated as a parse failure.
 
@@ -295,7 +296,7 @@ def verify(dst: sqlite3.Connection) -> None:
 
 def main() -> int:
     if not DISCOVERED_URLS_PATH.exists():
-        print(f"ERROR: {DISCOVERED_URLS_PATH} not found — run build/external/scrape_bazaarpulse.py first (T13).")
+        print(f"ERROR: {DISCOVERED_URLS_PATH} not found — run build/external/scrape_bazaarpulse.py first.")
         return 1
 
     dst = sqlite3.connect(ANALYTICS_DB_PATH)

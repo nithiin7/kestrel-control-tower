@@ -9,8 +9,9 @@ source (5 carriers, not paginated). fuel_surcharge_reference is pulled
 one GET /v1/fuel_surcharge?month=YYYY-MM call per month across the data
 window (Jan 2025 - Jun 2026, 18 months). Neither endpoint is chaos-prone
 (no 429/503 injected), so this script's own calls should never exercise
-the freight_client retry path in practice — that path exists for T11's
-cursor-walk of /v1/freight_invoices, which does see chaos.
+the freight_client retry path in practice — that path exists for the
+freight invoices ingest's cursor-walk of /v1/freight_invoices, which
+does see chaos.
 
 `regions` (a list in the API response) is stored as a comma-separated
 string — sqlite has no array type and nothing downstream needs to filter
