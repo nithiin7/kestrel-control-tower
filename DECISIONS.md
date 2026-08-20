@@ -15,6 +15,12 @@ across every page. `make build` → `data/analytics.db`; `make serve` runs the a
 - **BazaarPulse's "competitors" are Kestrel's own multi-brand portfolio, not
   rivals** — the single most important caveat here. Also: no auth/RBAC,
   production build, caching, or alerting
+- Incremental build (update changed rows only, vs. drop-and-rebuild every
+  table on every run) — `kestrel_ops.db` is a static grader snapshot with no
+  deltas to detect between runs, so there's nothing for it to buy here; it'd
+  need a watermark/diff strategy plus dependency-aware invalidation across
+  18 tables (a change in `dim_outlets` cascades to every fact/mart keyed on
+  it), real complexity not justifiable in a 6-hour build
 
 **Assumptions** (brief was ambiguous or self-contradicting)
 - Fill rate in **eaches**, not cases (overrides the brief); OTIF "in full" =
